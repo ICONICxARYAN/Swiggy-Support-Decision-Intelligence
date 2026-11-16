@@ -2,13 +2,47 @@ Domain: Support
 
 # Swiggy Support Decision Intelligence
 
-## Project Overview
+## How to run
 
-This project analyses synthetic Swiggy support ticket records using statistical methods and machine learning algorithms.
+This project analyses synthetic Swiggy support ticket records using
+statistical methods and machine learning algorithms.
 
-The project focuses on understanding resolution time, predicting ticket escalations, identifying customer support segments and evaluating different predictive models.
+The project focuses on understanding resolution time, predicting ticket
+escalations, identifying customer support segments, and evaluating
+different predictive models.
 
 The dataset contains 800 synthetic records and 10 columns.
+
+Clone the repository:
+
+```bash
+git clone https://github.com/ICONICxARYAN/Swiggy-Support-Decision-Intelligence.git
+cd Swiggy-Support-Decision-Intelligence
+
+Create and activate a virtual environment:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+Install dependencies:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+Generate the dataset and execute all four parts in order:
+
+```bash
+python generate_data.py
+python part1.py
+python part2.py
+python part3.py
+python part4.py
+```
+
+All results are saved in the outputs directory.
 
 ## Part 1 findings
 
@@ -156,6 +190,11 @@ The mean PC1 scores are:
 
 This shows that Segment A has the highest PC1 score, while Segment C has the lowest. Segment B lies between the two.
 
+### Additional PCA explanation
+
+The mean vector of the standardised five-feature dataset is approximately [0, 0, 0, 0, 0]. Therefore, the data is already centred before calculating the covariance matrix.
+
+Single linkage uses the minimum distance between two clusters. It can join clusters through a chain of nearby observations, whereas complete linkage uses the maximum distance and favours more compact groups. This explains why the two linkage methods can produce different clusters.
 
 ## Part 4 findings
 
@@ -201,6 +240,47 @@ For a 128 x 128 x 3 input, the fully connected layer requires 50,332,672 paramet
 
 The RNN architecture for ticket classification requires 26,768 parameters.
 
+### Additional R4.1 — Decision Tree
+
+S4 is the best split because it has the highest information gain of 0.1252 and Gini gain of 0.0606. A tree grown until every leaf is pure can memorise the training data and overfit. A maximum-depth limit can prevent excessive tree growth.
+
+### Additional R4.3 — AdaBoost
+
+After round 1 normalisation, the two misclassified points have weights 0.25 and 0.25, giving a combined weight of 0.50.
+
+Round 2 trusts h2 more because its weighted error is lower (0.1667) than the first learner's error (0.2500), giving h2 a larger alpha of 0.8047 compared with 0.5493.
+
+### Additional R4.4 — Neural Network Architecture
+
+**Model A: Convolutional network**
+
+| Layer | Output shape | Parameters |
+|---|---|---:|
+| Input | 28 × 28 × 1 | 0 |
+| Conv1 | 28 × 28 × 6 | 156 |
+| Max Pool 1 | 14 × 14 × 6 | 0 |
+| Conv2 | 10 × 10 × 16 | 2,416 |
+| Max Pool 2 | 5 × 5 × 16 | 0 |
+| Flatten | 400 | 0 |
+| Dense 1 | 32 | 12,832 |
+| Output | 10 | 330 |
+
+The total CNN parameter count is 15,734.
+
+**Model B: Recurrent Neural Network**
+
+- W_xh shape: 128 × 64
+- W_hh shape: 128 × 128
+- W_hy shape: 16 × 128
+
+The RNN reuses the same weight matrices at every sequence step. Therefore, the number of parameters remains constant even when the input sequence becomes longer.
+
+For the image classification network, ReLU is suitable for hidden layers, while softmax with categorical cross-entropy is suitable for the 10-class output.
+
+A very deep plain network can suffer from vanishing gradients, preventing early layers from learning effectively. Skip connections provide a direct path for information and gradients, helping improve training.
+
+
+
 ## Model-choice memo
 
 **To:** Head of Customer Support Operations  
@@ -217,3 +297,15 @@ The main limitation is that the dataset contains only 800 synthetic records, so 
 I recommend prioritising the structured-data model before developing Model A or Model B. Model B, the ticket-text classification system, would be a useful future extension once the structured model is established.
 
 **Recommendation:** Deploy Logistic Regression with a 0.15 alert threshold after real-world validation.
+
+## Limitations
+
+1. **Synthetic dataset:** The project uses 800 artificially generated records rather than real Swiggy customer-support data. Therefore, the findings cannot be assumed to represent actual business performance.
+
+2. **Limited dataset size:** The relatively small dataset may not capture every type of customer-support issue or escalation pattern.
+
+3. **Single train-test split:** Model evaluation uses one stratified 70/30 split. Different splits could produce different performance results.
+
+4. **Limited model comparison:** Only a small number of structured-data approaches were evaluated. More models and hyperparameter configurations could be explored in future work.
+
+5. **Deployment validation:** The selected model and alert threshold require validation using real operational data before practical deployment.
